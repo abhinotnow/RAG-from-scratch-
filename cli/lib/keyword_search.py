@@ -168,7 +168,12 @@ class InvertedIndex:
         counter = 1
         for id,score in bm25_scores.items():
             title = self.docmap[id]["title"]
-            results.append(f"{id} {title} - Score: {score:.2f}")
+            res = {
+                "id": id,
+                "title": title,
+                "score": score
+            }
+            results.append(res)
             if counter == limit:
                 break
             counter+=1

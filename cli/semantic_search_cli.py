@@ -44,6 +44,10 @@ def main() -> None:
 
     semantic_chunk_parser = subparsers.add_parser("embed_chunks")
 
+    chunked_semantic_search_parser = subparsers.add_parser("search_chunked")
+    chunked_semantic_search_parser.add_argument("query", type=str)
+    chunked_semantic_search_parser.add_argument("--limit", type=int, default=5)
+
     args = parser.parse_args()
 
     match args.command:
@@ -80,6 +84,14 @@ def main() -> None:
             movies = load_movies()
             chunk_embeddings = ch.load_or_create_chunk_embeddings(documents=movies)
             print(f"Generated {len(chunk_embeddings)} chunked embeddings.")
+        case "search_chunked":
+            movies = load_movies()
+            ch = ChunkedSemanticSearch()
+            chunk_embeddings = ch.load_or_create_chunk_embeddings(documents=movies)
+            res = ch.search_chunks(query=args.query, limit = args.limit)
+            for i,result in enumerate(res):
+                print(f"\n{i}. {result["title"]} (score: {result["score"]:.4f})")
+                print(f"   {result["document"]}...")
 
         case _:
             parser.print_help()

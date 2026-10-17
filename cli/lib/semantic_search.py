@@ -49,8 +49,7 @@ class SemanticSearch:
 
     def generate_embedding(self,text):
         if text.strip():
-            embeddings = self.model.encode(list(text))
-            return embeddings[0]
+            return self.model.encode(text)
         else:
             raise ValueError("Please enter a proper string")
 
@@ -123,12 +122,31 @@ class ChunkedSemanticSearch(SemanticSearch):
             return self.chunk_embeddings
 
     def semantic_chunk(self, text, chunk_size, overlap):
-            sentences = re.split(r"(?<=[.!?])\s+", text)
-            if overlap>0:
-                chunks = [" ".join(sentences[i:i+chunk_size]) for i in range(0,len(sentences),chunk_size-overlap)]
-            else:
-                chunks = [" ".join(sentences[i:i+chunk_size]) for i in range(0,len(sentences),chunk_size)]
-            return chunks
+        text = text.strip()
+        if not text:
+            return []
+
+        if chunk_size <= 0 or overlap < 0 or overlap >= chunk_size:
+            raise ValueError("chunk_size must be positive and overlap must be between 0 and chunk_size - 1")
+
+        sentences = re.split(r"(?<=[.!?])\s+", text)
+
+        if len(sentences) == 1 and not text.endswith((".", "!", "?")):
+            sentences = [text]
+
+        step = chunk_size - overlap
+
+        chunks = [
+            chunk
+            for i in range(0, len(sentences), step)
+            if (chunk := " ".join(
+                sentence.strip()
+                for sentence in sentences[i:i + chunk_size]
+                if sentence.strip()
+            ))
+        ]
+
+        return chunks
 
     def search_chunks(self, query: str, limit: int = 10):
         if self.chunk_embeddings is not None:
